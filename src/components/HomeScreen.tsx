@@ -5,10 +5,11 @@ import { levels, type LevelDef } from '../lib/levels'
 import { loadStats } from '../lib/stats'
 import { loadBest } from '../lib/storage'
 import Workbook from './Workbook'
+import { kanjiLevels, type KanjiLevel } from '../lib/kanji'
 
-interface Props { onStart: (level: LevelDef, difficulty: Difficulty) => void; onReport: () => void }
+interface Props { onStart: (level: LevelDef, difficulty: Difficulty) => void; onKanjiStart: (level: KanjiLevel) => void; onReport: () => void }
 
-export default function HomeScreen({ onStart, onReport }: Props) {
+export default function HomeScreen({ onStart, onKanjiStart, onReport }: Props) {
   const [selected, select] = useState<LevelDef | null>(null)
   const best = loadBest()
   if (selected) return <section className="sheet" data-level={selected.id}>
@@ -36,6 +37,13 @@ export default function HomeScreen({ onStart, onReport }: Props) {
         <strong>{level.title}</strong><span className="description">{level.description}</span>
         <span className="card-bottom"><span>☆ ベスト: {scores.length ? `${Math.max(...scores)}てん` : '—'}</span><span className="arrow" aria-hidden="true">→</span></span>
       </button>})}</div>
+    </section>
+    <section aria-labelledby="kanji-title">
+      <div className="section-heading"><h2 id="kanji-title">かんじドリル</h2><span>全3学年</span></div>
+      <div className="level-grid">{kanjiLevels.map(level => <button className="level-card" key={level.id} onClick={() => onKanjiStart(level)}>
+        <strong>{level.title}</strong><span className="description">小学{level.grade}年・{level.entries.length}字</span>
+        <span className="card-bottom">☆ ベスト: {best[level.id] ? `${best[level.id].score}てん` : '—'}<span className="arrow" aria-hidden="true">→</span></span>
+      </button>)}</div>
     </section>
     <section aria-labelledby="badge-title">
       <div className="section-heading"><h2 id="badge-title">バッジ</h2><span>{earned.size} / {badges.length}</span></div>

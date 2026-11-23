@@ -2,6 +2,9 @@ import { StrictMode } from 'react'
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import App from './App'
+import { kanjiLevels } from './lib/kanji'
+import { loadStats } from './lib/stats'
+import { loadBest } from './lib/storage'
 
 beforeEach(() => { localStorage.clear(); vi.useFakeTimers() })
 afterEach(() => { cleanup(); vi.useRealTimers() })
@@ -68,4 +71,26 @@ it('updates live time and clears pending work on unmount', () => {
   fireEvent.click(answerButton())
   cleanup()
   expect(vi.getTimerCount()).toBe(0)
+})
+
+it('plays a kanji set, awards badges, and reports the plain grade key', () => {
+  const grade = kanjiLevels[0]
+  render(<StrictMode><App /></StrictMode>)
+  fireEvent.click(screen.getByRole('button', { name: /1年生の漢字/ }))
+  for (let index = 1; index <= 10; index++) {
+    expect(screen.getByText(`${index} / 10`)).toBeVisible()
+    const word = screen.getByRole('heading', { level: 2 }).textContent
+    const entry = grade.entries.find(candidate => candidate.word === word)!
+    fireEvent.click(screen.getByRole('button', { name: entry.wordReading }))
+    expect(screen.getByRole('status')).toHaveTextContent('せいかい！')
+    act(() => vi.advanceTimersByTime(700))
+  }
+  expect(screen.getByText('はじめの一歩')).toBeVisible()
+  expect(loadStats().byKey['kanji-g1'].plays).toBe(1)
+  expect(loadBest()['kanji-g1'].score).toBe(1900)
+  fireEvent.click(screen.getByRole('button', { name: 'レベルをえらぶ' }))
+  expect(screen.getByRole('button', { name: /1年生の漢字.*1900てん/ })).toBeVisible()
+  fireEvent.click(screen.getByRole('button', { name: '保護者向けレポート' }))
+  expect(screen.getByRole('row', { name: /1年生の漢字 1回 100%/ })).toBeVisible()
+  expect(screen.queryByText('2年生の漢字')).not.toBeInTheDocument()
 })
