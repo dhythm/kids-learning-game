@@ -1,3 +1,4 @@
+import type { Difficulty } from './difficulty'
 import type { LevelDef, Operator } from './levels'
 
 export interface Question { text: string; answer: number; choices: number[] }
@@ -23,23 +24,25 @@ function makeQuestion(first: number, second: number, operator: Operator, rng: Rn
   return { text: `${left} ${operator} ${second} = ?`, answer, choices: shuffle([answer, ...shuffle(misses, rng).slice(0, 3)], rng) }
 }
 
-export function generateQuestion(level: LevelDef, rng: Rng = Math.random) {
+export function generateQuestion(level: LevelDef, difficulty: Difficulty, rng: Rng = Math.random) {
+  const { left, right } = level.ranges[difficulty]
   const operator = level.operators[integer(0, level.operators.length - 1, rng)]
-  const first = integer(...level.left, rng)
-  const second = integer(level.right[0], operator === '-' ? Math.min(first, level.right[1]) : level.right[1], rng)
+  const first = integer(...left, rng)
+  const second = integer(right[0], operator === '-' ? Math.min(first, right[1]) : right[1], rng)
   return makeQuestion(first, second, operator, rng)
 }
 
-export function generateSet(level: LevelDef, count = 10, rng: Rng = Math.random) {
+export function generateSet(level: LevelDef, difficulty: Difficulty, count = 10, rng: Rng = Math.random) {
+  const { left, right } = level.ranges[difficulty]
   const questions = new Map<string, Question>()
   for (let attempt = 0; questions.size < count && attempt < count * 3; attempt++) {
-    const question = generateQuestion(level, rng)
+    const question = generateQuestion(level, difficulty, rng)
     questions.set(question.text, question)
   }
   if (questions.size < count) {
     for (const operator of level.operators) {
-      for (let first = level.left[0]; first <= level.left[1]; first++) {
-        for (let second = level.right[0]; second <= level.right[1]; second++) {
+      for (let first = left[0]; first <= left[1]; first++) {
+        for (let second = right[0]; second <= right[1]; second++) {
           if (operator === '-' && second > first) break
           const question = makeQuestion(first, second, operator, rng)
           questions.set(question.text, question)
@@ -49,6 +52,6 @@ export function generateSet(level: LevelDef, count = 10, rng: Rng = Math.random)
     }
   }
   const set = [...questions.values()]
-  while (set.length < count) set.push(generateQuestion(level, rng))
+  while (set.length < count) set.push(generateQuestion(level, difficulty, rng))
   return set
 }

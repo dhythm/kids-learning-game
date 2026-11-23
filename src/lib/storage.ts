@@ -1,3 +1,5 @@
+import type { SubjectKey } from './difficulty'
+
 export interface BestScore { score: number; correct: number; total: number; timeMs: number; updatedAt: number }
 const key = 'kids-learning-game:best:v1'
 
@@ -16,16 +18,16 @@ export function loadBest(): Record<string, BestScore> {
   } catch { return {} }
 }
 
-export function getBest(levelId: string): BestScore | undefined {
+export function getBest(subject: SubjectKey): BestScore | undefined {
   const best = loadBest()
-  return Object.hasOwn(best, levelId) ? best[levelId] : undefined
+  return Object.hasOwn(best, subject) ? best[subject] : undefined
 }
 
-export function saveResult(levelId: string, { score, correct, total, timeMs }: Omit<BestScore, 'updatedAt'>) {
+export function saveResult(subject: SubjectKey, { score, correct, total, timeMs }: Omit<BestScore, 'updatedAt'>) {
   const best = loadBest()
-  if (Object.hasOwn(best, levelId) && best[levelId].score >= score) return false
+  if (Object.hasOwn(best, subject) && best[subject].score >= score) return false
   try {
-    localStorage.setItem(key, JSON.stringify({ ...best, [levelId]: { score, correct, total, timeMs, updatedAt: Date.now() } }))
+    localStorage.setItem(key, JSON.stringify({ ...best, [subject]: { score, correct, total, timeMs, updatedAt: Date.now() } }))
     return true
   } catch { return false }
 }
