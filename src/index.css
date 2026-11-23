@@ -67,6 +67,26 @@ progress { width: 100%; height: 10px; accent-color: var(--accent); }
 .result dd { margin: 4px 0 0; font-size: 20px; font-weight: 750; }
 .action { width: 100%; margin-top: 8px; }
 .primary { background: #376d52; color: white; border-color: #376d52; }
+.difficulty { display: flex; align-items: center; justify-content: space-between; min-height: 64px; padding: 12px 18px; font-size: 20px; }
+.difficulty small { color: var(--accent); font-size: 14px; }
+.badge-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 8px; list-style: none; padding: 0; }
+.badge-list li { border-radius: 10px; padding: 8px; font-size: 14px; }
+.badge-list small { display: block; margin-top: 3px; }
+.earned { background: #fff0bf; color: #56411c; }
+.locked { filter: grayscale(1); background: #ededeb; color: #575b56; }
+.new-badges li { animation: badge-pop 300ms ease-out; }
+@keyframes badge-pop { from { opacity: 0; transform: scale(.88); } to { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .new-badges li { animation: none; } }
+.report h2 { margin-top: 24px; font-size: 21px; }
+.report h3 { margin: 18px 0 6px; }
+.report dl { display: flex; flex-wrap: wrap; gap: 10px 24px; padding: 14px; background: #f2f4ed; border-radius: 8px; }
+.report dt, .report p { color: #545c55; font-size: 14px; }
+.report dd { margin: 4px 0 0; font-weight: 700; }
+.table-scroll { overflow-x: auto; }
+.report table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; white-space: nowrap; }
+.report th, .report td { padding: 8px; border-bottom: 1px solid var(--line); }
+.report thead { background: #f2f4ed; }
+.report .action { margin-top: 20px; }
 @media (max-width: 580px) {
   .level-grid { grid-template-columns: 1fr; }
   .welcome { padding: 18px 12px 18px 16px; }

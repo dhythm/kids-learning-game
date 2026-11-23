@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
+import { difficultyLabels, type Difficulty } from '../lib/difficulty'
 import type { LevelDef } from '../lib/levels'
 import type { Question } from '../lib/questions'
 import { initialScore, scoreAnswer, type DrillResult } from '../lib/scoring'
 
-interface Props { level: LevelDef; questions: Question[]; onFinish: (result: DrillResult) => void }
+interface Props { level: LevelDef; difficulty: Difficulty; questions: Question[]; onFinish: (result: DrillResult) => void }
 
-export default function DrillScreen({ level, questions, onFinish }: Props) {
+export default function DrillScreen({ level, difficulty, questions, onFinish }: Props) {
   const [index, setIndex] = useState(0)
   const [selected, setSelected] = useState<number | null>(null)
   const [stats, setStats] = useState(initialScore)
@@ -40,7 +41,7 @@ export default function DrillScreen({ level, questions, onFinish }: Props) {
   }
 
   return <section className="sheet" data-level={level.id}>
-    <span className="eyebrow">MATH DRILL</span><h1>{level.title}</h1>
+    <span className="eyebrow">MATH DRILL</span><h1>{level.title}</h1><p>{difficultyLabels[difficulty]}</p>
     <div className="drill-meta"><strong>{index + 1} / {questions.length}</strong><span>タイム {seconds}秒</span><span>{stats.score}てん</span></div>
     <progress value={index + 1} max={questions.length} aria-label="もんだいの進みぐあい" />
     <div className="combo">{stats.combo >= 2 && `🔥 ${stats.combo}コンボ`}</div>

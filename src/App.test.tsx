@@ -1,5 +1,5 @@
 import { StrictMode } from 'react'
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import App from './App'
 
@@ -10,6 +10,8 @@ function start() {
   render(<StrictMode><App /></StrictMode>)
   expect(screen.getByRole('heading', { name: 'さんすうドリル' })).toBeVisible()
   fireEvent.click(screen.getByRole('button', { name: /たしざん入門/ }))
+  fireEvent.click(screen.getByRole('button', { name: /やさしい/ }))
+  expect(screen.getByText('やさしい')).toBeVisible()
 }
 
 function answerButton() {
@@ -32,6 +34,8 @@ it('gives immediate feedback, advances once, saves a record, and replays', () =>
   expect(screen.getByRole('heading', { name: 'けっか' })).toBeVisible()
   expect(screen.getByText(/新記録！/)).toBeVisible()
   expect(screen.getByText('100%')).toBeVisible()
+  expect(screen.getByText('はじめの一歩')).toBeVisible()
+  expect(screen.getByText(/たしざん入門（やさしい）/)).toBeVisible()
   expect(screen.getByText(/ベスト: 1900てん/)).toBeVisible()
   fireEvent.click(screen.getByRole('button', { name: 'もう一度あそぶ' }))
   expect(screen.getByText('1 / 10')).toBeVisible()
@@ -42,8 +46,19 @@ it('gives immediate feedback, advances once, saves a record, and replays', () =>
     act(() => vi.advanceTimersByTime(700))
   }
   expect(screen.queryByText(/新記録！/)).not.toBeInTheDocument()
+  expect(screen.queryByText('はじめの一歩')).not.toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'レベルをえらぶ' }))
   expect(screen.getByRole('button', { name: /たしざん入門.*1900てん/ })).toBeVisible()
+  expect(screen.getByText(/はじめの一歩/)).toBeVisible()
+  fireEvent.click(screen.getByRole('button', { name: '保護者向けレポート' }))
+  const report = screen.getByRole('table', { name: 'たしざん入門' })
+  expect(within(report).getByRole('row', { name: /やさしい 2回 50%/ })).toBeVisible()
+  expect(screen.getByText('20問')).toBeVisible()
+  expect(screen.getAllByText('まだ遊んでいません')).toHaveLength(5)
+  fireEvent.click(screen.getByRole('button', { name: 'もどる' }))
+  fireEvent.click(screen.getByRole('button', { name: /たしざん入門/ }))
+  expect(screen.getByRole('button', { name: /やさしい.*1900てん/ })).toBeVisible()
+  expect(screen.getByRole('button', { name: /ふつう.*—/ })).toBeVisible()
 })
 
 it('updates live time and clears pending work on unmount', () => {
