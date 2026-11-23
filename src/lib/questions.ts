@@ -1,19 +1,12 @@
 import type { Difficulty } from './difficulty'
 import type { LevelDef, Operator } from './levels'
+import { shuffle } from './shuffle'
 
 export interface Question { text: string; answer: number; choices: number[] }
 type Rng = () => number
 
 function integer(min: number, max: number, rng: Rng) {
   return min + Math.floor(rng() * (max - min + 1))
-}
-
-function shuffle<T>(items: T[], rng: Rng) {
-  for (let end = items.length - 1; end > 0; end--) {
-    const index = integer(0, end, rng)
-    ;[items[end], items[index]] = [items[index], items[end]]
-  }
-  return items
 }
 
 function makeQuestion(first: number, second: number, operator: Operator, rng: Rng): Question {
