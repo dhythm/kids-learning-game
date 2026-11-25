@@ -4,6 +4,8 @@ import KanjiDrillScreen from './components/KanjiDrillScreen'
 import HomeScreen from './components/HomeScreen'
 import ResultScreen from './components/ResultScreen'
 import ParentReport from './components/ParentReport'
+import ReviewDrillScreen from './components/ReviewDrillScreen'
+import { addMissed, loadReview, removeSolved, toReviewQuestions, type ReviewItem, type ReviewQuestion } from './lib/review'
 import { earnedBadgeIds, earnedBadges, type BadgeDef } from './lib/badges'
 import { difficultyLabels, subjectKey, type Difficulty } from './lib/difficulty'
 import type { KanjiLevel } from './lib/kanji'
@@ -20,7 +22,8 @@ type Selection = MathSelection | KanjiSelection
 type Screen = { name: 'home' } | { name: 'report' }
   | (MathSelection & { name: 'math'; questions: Question[] })
   | (KanjiSelection & { name: 'kanji'; questions: KanjiQuestion[] })
-  | { name: 'result'; selection: Selection; result: DrillResult; isNewRecord: boolean; best?: BestScore; newBadges: BadgeDef[] }
+  | { name: 'review'; questions: ReviewQuestion[] }
+  | { name: 'result'; selection: Selection | null; result: DrillResult; isNewRecord: boolean; best?: BestScore; newBadges: BadgeDef[]; remaining?: number }
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'home' })
@@ -34,23 +37,36 @@ export default function App() {
       setScreen({ name: 'kanji', level, questions: generateKanjiSet(level.entries) })
     }
   }
-  function finish(selection: Selection, result: DrillResult) {
-    const key = 'difficulty' in selection ? subjectKey(selection.level.id, selection.difficulty) : selection.level.id
+  function startReview() {
+    const questions = toReviewQuestions(loadReview())
+    setScreen(questions.length ? { name: 'review', questions } : { name: 'home' })
+  }
+  function record(key: string, result: DrillResult) {
     const previous = earnedBadgeIds(loadStats())
-    const newBadges = earnedBadges(recordResult(key, result)).filter(badge => !previous.has(badge.id))
+    return earnedBadges(recordResult(key, result)).filter(badge => !previous.has(badge.id))
+  }
+  function finishReview(result: DrillResult, solvedKeys: string[]) {
+    const remaining = removeSolved(solvedKeys).length
+    setScreen({ name: 'result', selection: null, result, remaining, newBadges: record('review', result), isNewRecord: false })
+  }
+  function finish(selection: Selection, result: DrillResult, missed: ReviewItem[]) {
+    addMissed(missed)
+    const key = 'difficulty' in selection ? subjectKey(selection.level.id, selection.difficulty) : selection.level.id
+    const newBadges = record(key, result)
     const isNewRecord = saveResult(key, result)
     setScreen({ name: 'result', selection, result, newBadges, isNewRecord, best: getBest(key) })
   }
   return <>
     <header className="masthead"><div><span className="brand"><b aria-hidden="true">▦</b>まなびノート</span><span className="subject">さんすう・かんじ</span></div></header>
     <main>
-      {screen.name === 'home' && <HomeScreen onStart={(level, difficulty) => start({ level, difficulty })} onKanjiStart={level => start({ level })} onReport={() => setScreen({ name: 'report' })} />}
+      {screen.name === 'home' && <HomeScreen onStart={(level, difficulty) => start({ level, difficulty })} onKanjiStart={level => start({ level })} onReview={startReview} onReport={() => setScreen({ name: 'report' })} />}
       {screen.name === 'report' && <ParentReport store={loadStats()} onHome={home} />}
-      {screen.name === 'math' && <DrillScreen {...screen} eyebrow="MATH DRILL" subtitle={difficultyLabels[screen.difficulty]} onFinish={result => finish(screen, result)} />}
-      {screen.name === 'kanji' && <KanjiDrillScreen {...screen} onFinish={result => finish(screen, result)} />}
-      {screen.name === 'result' && <ResultScreen {...screen} title={screen.selection.level.title}
-        subtitle={'difficulty' in screen.selection ? difficultyLabels[screen.selection.difficulty] : undefined}
-        onRetry={() => start(screen.selection)} onHome={home} />}
+      {screen.name === 'math' && <DrillScreen {...screen} onFinish={(result, missed) => finish(screen, result, missed)} />}
+      {screen.name === 'kanji' && <KanjiDrillScreen {...screen} onFinish={(result, missed) => finish(screen, result, missed)} />}
+      {screen.name === 'review' && <ReviewDrillScreen {...screen} onFinish={finishReview} />}
+      {screen.name === 'result' && <ResultScreen {...screen} title={screen.selection?.level.title ?? 'ふくしゅう'}
+        subtitle={screen.selection && 'difficulty' in screen.selection ? difficultyLabels[screen.selection.difficulty] : undefined}
+        onRetry={screen.remaining === 0 ? undefined : () => screen.selection ? start(screen.selection) : startReview()} onHome={home} />}
     </main>
   </>
 }

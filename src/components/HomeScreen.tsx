@@ -2,14 +2,15 @@ import { useState } from 'react'
 import { badges, earnedBadgeIds } from '../lib/badges'
 import { difficulties, difficultyLabels, subjectKey, type Difficulty } from '../lib/difficulty'
 import { levels, type LevelDef } from '../lib/levels'
-import { loadStats } from '../lib/stats'
+import { currentStreak, loadStats, thisWeek } from '../lib/stats'
+import { loadReview } from '../lib/review'
 import { loadBest } from '../lib/storage'
 import Workbook from './Workbook'
 import { kanjiLevels, type KanjiLevel } from '../lib/kanji'
 
-interface Props { onStart: (level: LevelDef, difficulty: Difficulty) => void; onKanjiStart: (level: KanjiLevel) => void; onReport: () => void }
+interface Props { onStart: (level: LevelDef, difficulty: Difficulty) => void; onKanjiStart: (level: KanjiLevel) => void; onReview: () => void; onReport: () => void }
 
-export default function HomeScreen({ onStart, onKanjiStart, onReport }: Props) {
+export default function HomeScreen({ onStart, onKanjiStart, onReview, onReport }: Props) {
   const [selected, select] = useState<LevelDef | null>(null)
   const best = loadBest()
   if (selected) return <section className="sheet" data-level={selected.id}>
@@ -22,12 +23,22 @@ export default function HomeScreen({ onStart, onKanjiStart, onReport }: Props) {
     })}
     <button className="action" onClick={() => select(null)}>もどる</button>
   </section>
-  const earned = earnedBadgeIds(loadStats())
+  const stats = loadStats(), today = new Date()
+  const earned = earnedBadgeIds(stats), streak = currentStreak(stats, today)
+  const review = loadReview(), mathCount = review.filter(item => item.kind === 'math').length
   return <>
     <section className="welcome">
       <div><span className="eyebrow">MATH WORKBOOK</span><h1>さんすうドリル</h1><p>10問ずつ、楽しく算数のれんしゅう！</p></div>
       <Workbook />
     </section>
+    <section className="learning-card" aria-label="学習ストリーク">
+      <h2>{streak ? `🔥 ${streak}日 れんぞく がくしゅう中！` : 'きょうから はじめよう！'}</h2>
+      <ul className="week-dots">{thisWeek(stats, today).map(day => <li key={day.date} className={day.played ? 'played' : ''}
+        aria-current={day.isToday ? 'date' : undefined}><span className="sr-only">{day.date} {day.played ? '学習済み' : '未学習'} </span>{day.weekday}</li>)}</ul>
+    </section>
+    {review.length > 0 && <section className="learning-card" aria-labelledby="review-title"><h2 id="review-title">ふくしゅう</h2>
+      <p>算数 {mathCount}問・漢字 {review.length - mathCount}問</p><button className="action primary" onClick={onReview}>ふくしゅうをはじめる</button>
+    </section>}
     <section aria-labelledby="levels-title">
       <div className="section-heading"><h2 id="levels-title">レベルをえらぼう</h2><span>全6レベル</span></div>
       <div className="level-grid">{levels.map((level, index) => {

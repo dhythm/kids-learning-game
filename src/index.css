@@ -25,6 +25,13 @@ h1 { font-size: clamp(28px, 5vw, 43px); letter-spacing: -.045em; line-height: 1.
 .welcome p, .description { font-size: 14px; line-height: 1.6; }
 .section-heading { margin: 25px 0 13px; justify-content: space-between; }
 .section-heading h2 { font-size: 22px; }
+.learning-card { margin-top: 16px; padding: 16px; border: 1px solid var(--line); border-radius: 15px; background: #fffefa; }
+.learning-card h2 { font-size: 20px; }
+.week-dots { display: flex; justify-content: space-between; gap: 4px; padding: 0; margin: 12px 0 0; list-style: none; }
+.week-dots li { display: grid; place-items: center; width: min(32px, 12%); aspect-ratio: 1; border-radius: 50%; background: #ededeb; color: #555; }
+.week-dots .played { background: var(--accent); color: white; }
+.week-dots [aria-current] { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .section-heading > span, .grade { background: #f2f2eb; color: #5a6256; }
 .level-grid, .choices, .result dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
 [data-level="sub-basic"] { --accent: #416c99; --tint: #e1edf9; }

@@ -1,7 +1,7 @@
 import { difficulties, difficultyLabels, subjectKey } from '../lib/difficulty'
 import { levels } from '../lib/levels'
 import { kanjiLevels } from '../lib/kanji'
-import { currentStreak, localDate, totalCorrect, type StatsStore } from '../lib/stats'
+import { currentStreak, localDate, totalCorrect, weekdays, type StatsStore } from '../lib/stats'
 
 function accuracy(correct: number, questions: number) {
   return questions ? `${Math.round(100 * correct / questions)}%` : '—'
@@ -21,6 +21,11 @@ export default function ParentReport({ store, onHome }: { store: StatsStore; onH
     <dl>{[['挑戦回数', `${plays}回`], ['問題数', `${questions}問`], ['正答率', accuracy(totalCorrect(store), questions)],
       ['累計プレイ日数', `${store.playDates.length}日`], ['現在の連続日数', `${currentStreak(store)}日`]].map(([label, value]) =>
       <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+    <h2>最近の学習日</h2>
+    {store.playDates.length ? <ul>{store.playDates.slice(-14).reverse().map(date => {
+      const day = new Date(`${date}T12:00:00`)
+      return <li key={date}><time dateTime={date}>{day.getMonth() + 1}月{day.getDate()}日（{weekdays[day.getDay()]}）</time></li>
+    })}</ul> : <p>まだ記録がありません</p>}
     <h2>レベル別の記録</h2>
     {sections.map(section => {
       const rows = section.rows.flatMap(({ key, label }) => {

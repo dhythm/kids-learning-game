@@ -3,7 +3,7 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import App from './App'
 import { kanjiLevels } from './lib/kanji'
-import { loadStats } from './lib/stats'
+import { loadStats, recordResult } from './lib/stats'
 import { loadBest } from './lib/storage'
 
 beforeEach(() => { localStorage.clear(); vi.useFakeTimers() })
@@ -22,6 +22,34 @@ function answerButton() {
   const [left, right] = equation.match(/\d+/g)!.map(Number)
   return screen.getByRole('button', { name: String(left + right) })
 }
+
+it('records a math miss, keeps it after a wrong review and clears it after a correct retry', () => {
+  vi.setSystemTime(new Date(2024, 10, 24, 12))
+  start()
+  const wrongChoice = () => screen.getAllByRole('button').find(choice => choice !== answerButton())!
+  for (let index = 0; index < 10; index++) {
+    fireEvent.click(index === 9 ? wrongChoice() : answerButton())
+    act(() => vi.advanceTimersByTime(700))
+  }
+  fireEvent.click(screen.getByRole('button', { name: 'レベルをえらぶ' }))
+  expect(screen.getByText('算数 1問・漢字 0問')).toBeVisible()
+  expect(screen.getByText('🔥 1日 れんぞく がくしゅう中！')).toBeVisible()
+  fireEvent.click(screen.getByRole('button', { name: 'ふくしゅうをはじめる' }))
+  expect(screen.getByText('1 / 1')).toBeVisible()
+  fireEvent.click(wrongChoice())
+  act(() => vi.advanceTimersByTime(700))
+  expect(screen.getByText('ふくしゅうリスト: あと1問')).toBeVisible()
+  fireEvent.click(screen.getByRole('button', { name: 'もう一度あそぶ' }))
+  fireEvent.click(answerButton())
+  act(() => vi.advanceTimersByTime(700))
+  expect(screen.getByText('100%')).toBeVisible()
+  expect(loadStats().byKey.review).toMatchObject({ plays: 2, totalCorrect: 1 })
+  expect(loadBest()).not.toHaveProperty('review')
+  fireEvent.click(screen.getByRole('button', { name: 'レベルをえらぶ' }))
+  expect(screen.queryByRole('region', { name: 'ふくしゅう' })).not.toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: '保護者向けレポート' }))
+  expect(screen.getByText('11月24日（日）')).toBeVisible()
+})
 
 it('gives immediate feedback, advances once, saves a record, and replays', () => {
   start()
@@ -71,6 +99,42 @@ it('updates live time and clears pending work on unmount', () => {
   fireEvent.click(answerButton())
   cleanup()
   expect(vi.getTimerCount()).toBe(0)
+})
+
+it('replays a missed kanji word with its original reading', () => {
+  render(<StrictMode><App /></StrictMode>)
+  fireEvent.click(screen.getByRole('button', { name: /2年生の漢字/ }))
+  let missed = kanjiLevels[1].entries[0]
+  for (let index = 0; index < 10; index++) {
+    const word = screen.getByRole('heading', { level: 2 }).textContent
+    const entry = kanjiLevels[1].entries.find(candidate => candidate.word === word)!
+    const answer = screen.getByRole('button', { name: entry.wordReading })
+    if (index === 0) missed = entry
+    fireEvent.click(index === 0 ? screen.getAllByRole('button').find(choice => choice !== answer)! : answer)
+    act(() => vi.advanceTimersByTime(700))
+  }
+  fireEvent.click(screen.getByRole('button', { name: 'レベルをえらぶ' }))
+  expect(screen.getByText('算数 0問・漢字 1問')).toBeVisible()
+  fireEvent.click(screen.getByRole('button', { name: 'ふくしゅうをはじめる' }))
+  expect(screen.getByRole('heading', { name: missed.word })).toBeVisible()
+  expect(screen.getByText('よみかたを えらぼう')).toBeVisible()
+  fireEvent.click(screen.getByRole('button', { name: missed.wordReading }))
+  act(() => vi.advanceTimersByTime(700))
+  expect(screen.getByText('100%')).toBeVisible()
+})
+
+it('lists only the latest fourteen local play dates, newest first', () => {
+  render(<App />)
+  expect(screen.getByText('きょうから はじめよう！')).toBeVisible()
+  fireEvent.click(screen.getByRole('button', { name: '保護者向けレポート' }))
+  expect(screen.getByText('まだ記録がありません')).toBeVisible()
+  fireEvent.click(screen.getByRole('button', { name: 'もどる' }))
+  for (let day = 10; day <= 24; day++) recordResult('review', { correct: 1, maxCombo: 1, total: 1, timeMs: 1000 }, new Date(2024, 10, day))
+  fireEvent.click(screen.getByRole('button', { name: '保護者向けレポート' }))
+  const dates = screen.getAllByRole('listitem')
+  expect(dates).toHaveLength(14)
+  expect(dates[0]).toHaveTextContent('11月24日（日）')
+  expect(dates[13]).toHaveTextContent('11月11日（月）')
 })
 
 it('plays a kanji set, awards badges, and reports the plain grade key', () => {
