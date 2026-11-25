@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { initialScore, scoreAnswer, type DrillResult } from '../lib/scoring'
 import ClockFace from './ClockFace'
 import MoneyVisual from './MoneyVisual'
 import type { ClockTime } from '../lib/clock'
 import type { CoinGroup } from '../lib/money'
 
-interface Prompt { text: string; target?: string; promptLabel?: string; clock?: ClockTime; money?: CoinGroup[]; answer: number | string; choices: (number | string)[] }
+interface Prompt { text: string; target?: string; example?: string; promptLabel?: string; clock?: ClockTime; money?: CoinGroup[]; answer: number | string; choices: (number | string)[] }
 interface Attempt<Question> { question: Question; correct: boolean; answeredAt: number }
 interface Props<Question extends Prompt> { level: { id: string; title: string }; eyebrow: string; subtitle?: string; questions: Question[]; onFinish: (result: DrillResult, attempts: Attempt<Question>[]) => void }
 
@@ -57,6 +57,9 @@ export default function DrillSession<Question extends Prompt>({ level, eyebrow, 
       <h2 className="question" aria-label={question.text} aria-live="polite">{'target' in question ? [...question.text].map((character, position) =>
         character === question.target ? <span className="target-kanji" key={position}>{character}</span> : character) : question.text}</h2>}
     <div className="choices">{question.choices.map(value => <button key={value} disabled={selected !== null} onClick={() => choose(value)} className={selected === null ? '' : value === question.answer ? 'correct' : value === selected ? 'wrong' : ''}>{label(value)}</button>)}</div>
-    <p className="feedback" role="status">{selected === null ? 'こたえをタップしよう' : selected === question.answer ? 'せいかい！' : `おしい！ せいかいは ${label(question.answer)} だよ`}</p>
+    <p className="feedback" role="status">{selected === null ? 'こたえをタップしよう' : selected === question.answer ? 'せいかい！' : `おしい！ せいかいは ${label(question.answer)} だよ`}
+      {selected !== null && question.example && <span className="example-bubble">例文： {question.example.split(question.text).map((part, position) =>
+        <Fragment key={position}>{position > 0 && <strong>{question.text}</strong>}{part}</Fragment>)}</span>}
+    </p>
   </section>
 }

@@ -148,7 +148,12 @@ it('replays a missed kanji word with its original reading', () => {
     const entry = kanjiLevels[1].entries.find(candidate => candidate.word === word)!
     const answer = screen.getByRole('button', { name: entry.wordReading })
     if (index === 0) missed = entry
+    expect(screen.queryByText(/例文：/)).not.toBeInTheDocument()
     fireEvent.click(index === 0 ? screen.getAllByRole('button').find(choice => choice !== answer)! : answer)
+    const example = screen.getByText(/例文：/)
+    expect(example).toBeVisible()
+    expect(example).toHaveTextContent(`例文： ${entry.example}`)
+    expect(within(example).getByText(entry.word, { selector: 'strong' })).toBeVisible()
     act(() => vi.advanceTimersByTime(700))
   }
   fireEvent.click(screen.getByRole('button', { name: 'レベルをえらぶ' }))
@@ -157,6 +162,7 @@ it('replays a missed kanji word with its original reading', () => {
   expect(screen.getByRole('heading', { name: missed.word })).toBeVisible()
   expect(screen.getByText('よみかたを えらぼう')).toBeVisible()
   fireEvent.click(screen.getByRole('button', { name: missed.wordReading }))
+  expect(screen.getByText(/例文：/)).toHaveTextContent(missed.example)
   act(() => vi.advanceTimersByTime(700))
   expect(screen.getByText('100%')).toBeVisible()
 })
