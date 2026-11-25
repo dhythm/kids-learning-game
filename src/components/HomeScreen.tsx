@@ -53,7 +53,7 @@ export default function HomeScreen({ onStart, onStageStart, onReview, onReport }
       </button>})}</div>
     </section>
     <section aria-labelledby="kanji-title">
-      <div className="section-heading"><h2 id="kanji-title">かんじドリル</h2><span>全3学年</span></div>
+      <div className="section-heading"><h2 id="kanji-title">かんじドリル</h2><span>全{kanjiLevels.length}学年</span></div>
       <div className="level-grid">{kanjiLevels.map(level => <button className="level-card" key={level.id} onClick={() => onStageStart(level)}>
         <strong>{level.title}</strong><span className="description">小学{level.grade}年・{level.entries.length}字</span>
         <span className="card-bottom">☆ ベスト: {best[level.id] ? `${best[level.id].score}てん` : '—'}<span className="arrow" aria-hidden="true">→</span></span>
