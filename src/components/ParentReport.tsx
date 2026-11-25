@@ -1,6 +1,7 @@
 import { difficulties, difficultyLabels, subjectKey } from '../lib/difficulty'
 import { levels } from '../lib/levels'
 import { kanjiLevels } from '../lib/kanji'
+import { visualSubjects } from '../lib/visualSubjects'
 import { currentStreak, localDate, totalCorrect, weekdays, type StatsStore } from '../lib/stats'
 
 function accuracy(correct: number, questions: number) {
@@ -13,8 +14,10 @@ export default function ParentReport({ store, onHome }: { store: StatsStore; onH
   const questions = subjects.reduce((sum, subject) => sum + subject.totalQuestions, 0)
   const sections = levels.map(level => ({ title: level.title, column: '難易度',
     rows: difficulties.map(difficulty => ({ key: subjectKey(level.id, difficulty), label: difficultyLabels[difficulty] })) }))
-  const kanjiRows = kanjiLevels.filter(level => store.byKey[level.id]?.plays).map(level => ({ key: level.id, label: level.title }))
-  if (kanjiRows.length) sections.push({ title: 'かんじドリル', column: '学年', rows: kanjiRows })
+  for (const subject of [{ title: 'かんじドリル', levels: kanjiLevels, column: '学年' }, ...visualSubjects.map(subject => ({ ...subject, column: 'ステージ' }))]) {
+    const rows = subject.levels.filter(level => store.byKey[level.id]?.plays).map(level => ({ key: level.id, label: level.title }))
+    if (rows.length) sections.push({ title: subject.title, column: subject.column, rows })
+  }
   return <section className="sheet report">
     <h1>保護者向けレポート</h1>
     <h2>全体の記録</h2>

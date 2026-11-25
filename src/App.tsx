@@ -1,6 +1,12 @@
 import { useState } from 'react'
 import DrillScreen from './components/DrillScreen'
 import KanjiDrillScreen from './components/KanjiDrillScreen'
+import ClockDrillScreen from './components/ClockDrillScreen'
+import MoneyDrillScreen from './components/MoneyDrillScreen'
+import type { ClockLevel } from './lib/clock'
+import type { MoneyLevel } from './lib/money'
+import { generateClockSet, type ClockQuestion } from './lib/clockQuestions'
+import { generateMoneySet, type MoneyQuestion } from './lib/moneyQuestions'
 import HomeScreen from './components/HomeScreen'
 import ResultScreen from './components/ResultScreen'
 import ParentReport from './components/ParentReport'
@@ -18,10 +24,12 @@ import { getBest, saveResult, type BestScore } from './lib/storage'
 
 type MathSelection = { level: LevelDef; difficulty: Difficulty }
 type KanjiSelection = { level: KanjiLevel }
-type Selection = MathSelection | KanjiSelection
+type Selection = MathSelection | { level: KanjiLevel | ClockLevel | MoneyLevel }
 type Screen = { name: 'home' } | { name: 'report' }
   | (MathSelection & { name: 'math'; questions: Question[] })
   | (KanjiSelection & { name: 'kanji'; questions: KanjiQuestion[] })
+  | { name: 'clock'; level: ClockLevel; questions: ClockQuestion[] }
+  | { name: 'money'; level: MoneyLevel; questions: MoneyQuestion[] }
   | { name: 'review'; questions: ReviewQuestion[] }
   | { name: 'result'; selection: Selection | null; result: DrillResult; isNewRecord: boolean; best?: BestScore; newBadges: BadgeDef[]; remaining?: number }
 
@@ -34,7 +42,9 @@ export default function App() {
       setScreen({ name: 'math', level, difficulty, questions: generateSet(level, difficulty) })
     } else {
       const { level } = selection
-      setScreen({ name: 'kanji', level, questions: generateKanjiSet(level.entries) })
+      if ('step' in level) setScreen({ name: 'clock', level, questions: generateClockSet(level) })
+      else if ('minCoins' in level) setScreen({ name: 'money', level, questions: generateMoneySet(level) })
+      else setScreen({ name: 'kanji', level, questions: generateKanjiSet(level.entries) })
     }
   }
   function startReview() {
@@ -57,12 +67,14 @@ export default function App() {
     setScreen({ name: 'result', selection, result, newBadges, isNewRecord, best: getBest(key) })
   }
   return <>
-    <header className="masthead"><div><span className="brand"><b aria-hidden="true">▦</b>まなびノート</span><span className="subject">さんすう・かんじ</span></div></header>
+    <header className="masthead"><div><span className="brand"><b aria-hidden="true">▦</b>まなびノート</span><span className="subject">さんすう・かんじ・とけい・おかね</span></div></header>
     <main>
-      {screen.name === 'home' && <HomeScreen onStart={(level, difficulty) => start({ level, difficulty })} onKanjiStart={level => start({ level })} onReview={startReview} onReport={() => setScreen({ name: 'report' })} />}
+      {screen.name === 'home' && <HomeScreen onStart={(level, difficulty) => start({ level, difficulty })} onStageStart={level => start({ level })} onReview={startReview} onReport={() => setScreen({ name: 'report' })} />}
       {screen.name === 'report' && <ParentReport store={loadStats()} onHome={home} />}
       {screen.name === 'math' && <DrillScreen {...screen} onFinish={(result, missed) => finish(screen, result, missed)} />}
       {screen.name === 'kanji' && <KanjiDrillScreen {...screen} onFinish={(result, missed) => finish(screen, result, missed)} />}
+      {screen.name === 'clock' && <ClockDrillScreen {...screen} onFinish={(result, missed) => finish(screen, result, missed)} />}
+      {screen.name === 'money' && <MoneyDrillScreen {...screen} onFinish={(result, missed) => finish(screen, result, missed)} />}
       {screen.name === 'review' && <ReviewDrillScreen {...screen} onFinish={finishReview} />}
       {screen.name === 'result' && <ResultScreen {...screen} title={screen.selection?.level.title ?? 'ふくしゅう'}
         subtitle={screen.selection && 'difficulty' in screen.selection ? difficultyLabels[screen.selection.difficulty] : undefined}

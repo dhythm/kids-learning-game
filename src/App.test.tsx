@@ -5,9 +5,47 @@ import App from './App'
 import { kanjiLevels } from './lib/kanji'
 import { loadStats, recordResult } from './lib/stats'
 import { loadBest } from './lib/storage'
+import { formatTime } from './lib/clockQuestions'
+import { loadReview } from './lib/review'
 
 beforeEach(() => { localStorage.clear(); vi.useFakeTimers() })
 afterEach(() => { cleanup(); vi.useRealTimers() })
+
+it.each([
+  { id: 'clock-s1', title: /○じと ○じはん/, report: 'とけいドリル' },
+  { id: 'money-s1', title: /こうかだけ/, report: 'おかねドリル' },
+])('plays $id, reports the stage and replays the missed visual', ({ id, title, report }) => {
+  render(<StrictMode><App /></StrictMode>)
+  fireEvent.click(screen.getByRole('button', { name: title }))
+  function visualAnswer() {
+    const visual = screen.getByRole('img')
+    if (id === 'money-s1') return `${visual.getAttribute('data-total')}円`
+    expect(visual.tagName).toBe('svg')
+    expect(visual).toHaveAccessibleName('とけい')
+    return formatTime(Number(visual.getAttribute('data-hour')), Number(visual.getAttribute('data-minute')))
+  }
+  let missed = ''
+  for (let index = 0; index < 10; index++) {
+    const answer = visualAnswer(), correct = screen.getByRole('button', { name: answer })
+    if (index === 1) missed = answer
+    fireEvent.click(index === 1 ? screen.getAllByRole('button').find(button => button !== correct)! : correct)
+    expect(screen.getByRole('status')).toHaveTextContent(index === 1 ? `せいかいは ${answer}` : 'せいかい！')
+    act(() => vi.advanceTimersByTime(700))
+  }
+  expect(loadStats().byKey[id].totalCorrect).toBe(9)
+  expect(loadBest()[id].correct).toBe(9)
+  expect(screen.getByText('はじめの一歩')).toBeVisible()
+  fireEvent.click(screen.getByRole('button', { name: 'レベルをえらぶ' }))
+  expect(screen.getByRole('button', { name: title })).toHaveTextContent(`${loadBest()[id].score}てん`)
+  fireEvent.click(screen.getByRole('button', { name: '保護者向けレポート' }))
+  expect(within(screen.getByRole('table', { name: report })).getByRole('row', { name: title })).toHaveTextContent('90%')
+  fireEvent.click(screen.getByRole('button', { name: 'もどる' }))
+  fireEvent.click(screen.getByRole('button', { name: 'ふくしゅうをはじめる' }))
+  expect(visualAnswer()).toBe(missed)
+  fireEvent.click(screen.getByRole('button', { name: missed }))
+  act(() => vi.advanceTimersByTime(700))
+  expect(loadReview()).toEqual([])
+})
 
 function start() {
   render(<StrictMode><App /></StrictMode>)

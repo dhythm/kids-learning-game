@@ -60,6 +60,16 @@ progress { width: 100%; height: 10px; accent-color: var(--accent); }
 .question { text-align: center; font-size: clamp(34px, 8vw, 64px); margin: 12px 0 28px; font-variant-numeric: tabular-nums; }
 .choices button, .action { border: 2px solid #d6d8ce; border-radius: 12px; font-weight: 750; background: #fff; }
 .choices button { min-height: 82px; font-size: 30px; }
+.clock-face { display: block; width: min(240px, 70vw); max-width: 100%; margin: 0 auto 20px; }
+.money-visual { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; margin: 12px auto 28px; }
+.yen-coin, .yen-bill { display: inline-grid; place-items: center; font-weight: 750; border: 4px double #645e51; color: #302d26; }
+.yen-coin { width: 52px; aspect-ratio: 1; border-radius: 50%; background: #e0e2df; }
+.yen-coin[data-denom="1"] { width: 44px; }
+.yen-coin[data-denom="5"], .yen-coin[data-denom="500"] { background: #e8cf89; }
+.yen-coin[data-denom="10"] { background: #d9a484; }
+.yen-coin[data-denom="500"] { width: 60px; }
+.yen-bill { width: min(112px, 100%); aspect-ratio: 2; border-radius: 6px; background: #cfdfcf; }
+.yen-bill[data-denom="5000"] { background: #d1deea; }
 .target-kanji { color: var(--accent); text-decoration: underline; text-underline-offset: .14em; }
 [data-level^="kanji-g"] .choices button { font-size: clamp(20px, 4.8vw, 30px); }
 .choices button:disabled { color: inherit; opacity: 1; cursor: default; }

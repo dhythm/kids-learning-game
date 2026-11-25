@@ -7,10 +7,13 @@ import { loadReview } from '../lib/review'
 import { loadBest } from '../lib/storage'
 import Workbook from './Workbook'
 import { kanjiLevels, type KanjiLevel } from '../lib/kanji'
+import { visualSubjects } from '../lib/visualSubjects'
+import type { ClockLevel } from '../lib/clock'
+import type { MoneyLevel } from '../lib/money'
 
-interface Props { onStart: (level: LevelDef, difficulty: Difficulty) => void; onKanjiStart: (level: KanjiLevel) => void; onReview: () => void; onReport: () => void }
+interface Props { onStart: (level: LevelDef, difficulty: Difficulty) => void; onStageStart: (level: KanjiLevel | ClockLevel | MoneyLevel) => void; onReview: () => void; onReport: () => void }
 
-export default function HomeScreen({ onStart, onKanjiStart, onReview, onReport }: Props) {
+export default function HomeScreen({ onStart, onStageStart, onReview, onReport }: Props) {
   const [selected, select] = useState<LevelDef | null>(null)
   const best = loadBest()
   if (selected) return <section className="sheet" data-level={selected.id}>
@@ -25,7 +28,7 @@ export default function HomeScreen({ onStart, onKanjiStart, onReview, onReport }
   </section>
   const stats = loadStats(), today = new Date()
   const earned = earnedBadgeIds(stats), streak = currentStreak(stats, today)
-  const review = loadReview(), mathCount = review.filter(item => item.kind === 'math').length
+  const review = loadReview(), count = (kind: typeof review[number]['kind']) => review.filter(item => item.kind === kind).length
   return <>
     <section className="welcome">
       <div><span className="eyebrow">MATH WORKBOOK</span><h1>さんすうドリル</h1><p>10問ずつ、楽しく算数のれんしゅう！</p></div>
@@ -37,7 +40,7 @@ export default function HomeScreen({ onStart, onKanjiStart, onReview, onReport }
         aria-current={day.isToday ? 'date' : undefined}><span className="sr-only">{day.date} {day.played ? '学習済み' : '未学習'} </span>{day.weekday}</li>)}</ul>
     </section>
     {review.length > 0 && <section className="learning-card" aria-labelledby="review-title"><h2 id="review-title">ふくしゅう</h2>
-      <p>算数 {mathCount}問・漢字 {review.length - mathCount}問</p><button className="action primary" onClick={onReview}>ふくしゅうをはじめる</button>
+      <p>算数 {count('math')}問・漢字 {count('kanji')}問{count('clock') > 0 && `・とけい ${count('clock')}問`}{count('money') > 0 && `・おかね ${count('money')}問`}</p><button className="action primary" onClick={onReview}>ふくしゅうをはじめる</button>
     </section>}
     <section aria-labelledby="levels-title">
       <div className="section-heading"><h2 id="levels-title">レベルをえらぼう</h2><span>全6レベル</span></div>
@@ -51,11 +54,18 @@ export default function HomeScreen({ onStart, onKanjiStart, onReview, onReport }
     </section>
     <section aria-labelledby="kanji-title">
       <div className="section-heading"><h2 id="kanji-title">かんじドリル</h2><span>全3学年</span></div>
-      <div className="level-grid">{kanjiLevels.map(level => <button className="level-card" key={level.id} onClick={() => onKanjiStart(level)}>
+      <div className="level-grid">{kanjiLevels.map(level => <button className="level-card" key={level.id} onClick={() => onStageStart(level)}>
         <strong>{level.title}</strong><span className="description">小学{level.grade}年・{level.entries.length}字</span>
         <span className="card-bottom">☆ ベスト: {best[level.id] ? `${best[level.id].score}てん` : '—'}<span className="arrow" aria-hidden="true">→</span></span>
       </button>)}</div>
     </section>
+    {visualSubjects.map(subject => <section key={subject.title} aria-label={subject.title}>
+      <div className="section-heading"><h2>{subject.title}</h2><span>全{subject.levels.length}ステージ</span></div>
+      <div className="level-grid">{subject.levels.map(level => <button className="level-card" data-level={level.id} key={level.id} onClick={() => onStageStart(level)}>
+        <strong>{level.title}</strong><span className="description">{level.description}</span>
+        <span className="card-bottom">☆ ベスト: {best[level.id] ? `${best[level.id].score}てん` : '—'}<span className="arrow" aria-hidden="true">→</span></span>
+      </button>)}</div>
+    </section>)}
     <section aria-labelledby="badge-title">
       <div className="section-heading"><h2 id="badge-title">バッジ</h2><span>{earned.size} / {badges.length}</span></div>
       <ul className="badge-list">{badges.map(badge => <li key={badge.id} className={earned.has(badge.id) ? 'earned' : 'locked'}>
