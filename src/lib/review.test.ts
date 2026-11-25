@@ -9,6 +9,22 @@ const kanji = { kind: 'kanji', gradeId: grade.id, kanji: entry.kanji, word: entr
 beforeEach(() => localStorage.clear())
 afterEach(() => vi.restoreAllMocks())
 
+it('rebuilds visual prompts, deduplicates across stages, and skips invalid stored visuals', () => {
+  const clock = { kind: 'clock', levelId: 'clock-s1', hour: 12, minute: 30, missedAt: 1 } satisfies ReviewItem
+  const money = { kind: 'money', levelId: 'money-s1', coins: [{ denom: 10, count: 1 }, { denom: 1, count: 2 }], total: 12, missedAt: 2 } satisfies ReviewItem
+  localStorage.setItem(storageKey, JSON.stringify([{ ...clock, minute: 5 }, { ...clock, hour: 0 }, { ...money, total: 17 }, { ...money, coins: [] }]))
+  expect(loadReview()).toEqual([])
+  addMissed([money, clock, { ...clock, levelId: 'clock-s2', missedAt: 3 }, { ...money, coins: [...money.coins].reverse(), missedAt: 4 }])
+  const questions = toReviewQuestions(loadReview(), () => 0)
+  expect(questions).toHaveLength(2)
+  expect(questions.find(question => question.clock)).toMatchObject({ key: 'clock:12:30', clock: { hour: 12, minute: 30 }, answer: '12時30分' })
+  expect(questions.find(question => question.money)).toMatchObject({ key: 'money:12:10x1,1x2', money: [...money.coins].reverse(), answer: '12円' })
+  for (const question of questions) {
+    expect(new Set(question.choices).size).toBe(4)
+    expect(question.choices).toContain(question.answer)
+  }
+})
+
 it('deduplicates both subjects across sessions, refreshes timestamps and removes only solved keys', () => {
   addMissed([math, kanji])
   const latest = { ...math, missedAt: 3 }, latestKanji = { ...kanji, missedAt: 4 }
