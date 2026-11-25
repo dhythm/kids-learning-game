@@ -1,10 +1,19 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
-import { currentStreak, loadStats, localDate, recordResult, totalCorrect } from './stats'
+import { currentStreak, loadStats, localDate, recordResult, thisWeek, totalCorrect } from './stats'
 
 const key = 'kids-learning-game:stats:v1'
 const result = { correct: 10, total: 10, timeMs: 4000, maxCombo: 10 }
 beforeEach(() => localStorage.clear())
 afterEach(() => vi.restoreAllMocks())
+
+it.each([new Date(2024, 11, 29), new Date(2025, 0, 1), new Date(2025, 0, 4)])('shows the Sunday-first local week for %s', today => {
+  const store = { byKey: {}, playDates: ['2024-12-28', '2024-12-30', '2025-01-03'] }
+  const days = thisWeek(store, today)
+  expect(days.map(day => day.weekday).join('')).toBe('日月火水木金土')
+  expect(days.map(day => day.date)).toEqual(['2024-12-29', '2024-12-30', '2024-12-31', '2025-01-01', '2025-01-02', '2025-01-03', '2025-01-04'])
+  expect(days.filter(day => day.played).map(day => day.date)).toEqual(['2024-12-30', '2025-01-03'])
+  expect(days.filter(day => day.isToday).map(day => day.date)).toEqual([localDate(today)])
+})
 
 it('aggregates by subject, counting each local play date only once in chronological order', () => {
   const first = new Date(2024, 1, 29, 23, 59), last = new Date(2024, 2, 1, 0, 1)

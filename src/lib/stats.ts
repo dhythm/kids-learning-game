@@ -67,6 +67,18 @@ export function totalCorrect(store: StatsStore) {
 
 function dayNumber(date: string) { return Date.parse(date) / 86_400_000 }
 
+export const weekdays = ['日', '月', '火', '水', '木', '金', '土'] as const
+
+export function thisWeek(store: StatsStore, today = new Date()) {
+  const played = new Set(store.playDates)
+  return weekdays.map((weekday, index) => {
+    const day = new Date(today)
+    day.setDate(today.getDate() - today.getDay() + index)
+    const date = localDate(day)
+    return { date, weekday, played: played.has(date), isToday: index === today.getDay() }
+  })
+}
+
 export function currentStreak(store: StatsStore, today = new Date()) {
   const days = new Set(store.playDates.map(dayNumber))
   let day = dayNumber(localDate(today))

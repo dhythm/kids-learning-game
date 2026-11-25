@@ -2,7 +2,7 @@ import type { Difficulty } from './difficulty'
 import type { LevelDef, Operator } from './levels'
 import { shuffle } from './shuffle'
 
-export interface Question { text: string; answer: number; choices: number[] }
+export interface Question { first: number; second: number; operator: Operator; text: string; answer: number; choices: number[] }
 type Rng = () => number
 
 function integer(min: number, max: number, rng: Rng) {
@@ -12,9 +12,13 @@ function integer(min: number, max: number, rng: Rng) {
 function makeQuestion(first: number, second: number, operator: Operator, rng: Rng): Question {
   const left = operator === '÷' ? first * second : first
   const answer = operator === '+' ? left + second : operator === '-' ? left - second : operator === '×' ? left * second : first
+  return { first: left, second, operator, text: `${left} ${operator} ${second} = ?`, answer, choices: mathChoices(answer, second, operator, rng) }
+}
+
+export function mathChoices(answer: number, second: number, operator: Operator, rng: Rng) {
   const step = operator === '×' ? second : 10
-  const misses = [...new Set([1, -1, 2, -2, step, -step, 3].map(offset => answer + offset))].filter(value => value >= 0)
-  return { text: `${left} ${operator} ${second} = ?`, answer, choices: shuffle([answer, ...shuffle(misses, rng).slice(0, 3)], rng) }
+  const misses = [...new Set([1, -1, 2, -2, step, -step, 3].map(offset => answer + offset))].filter(value => value >= 0 && value !== answer)
+  return shuffle([answer, ...shuffle(misses, rng).slice(0, 3)], rng)
 }
 
 export function generateQuestion(level: LevelDef, difficulty: Difficulty, rng: Rng = Math.random) {

@@ -42,6 +42,10 @@ describe.each(levels.flatMap(level => difficulties.map(difficulty => ({ level, d
       const set = generateSet(level, difficulty, undefined, rng)
       expect(set).toHaveLength(10)
       expect(new Set(set.map(question => question.text)).size).toBe(10)
+      for (const { first, second, operator, text, answer } of set) {
+        expect(text).toBe(`${first} ${operator} ${second} = ?`)
+        expect(answer).toBe(({ '+': first + second, '-': first - second, '×': first * second, '÷': first / second })[operator])
+      }
     }
   })
 })
