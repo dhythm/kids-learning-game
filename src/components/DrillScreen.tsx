@@ -1,4 +1,5 @@
 import DrillSession from './DrillSession'
+import { spokenQuestion } from '../lib/speech'
 import { difficultyLabels, type Difficulty } from '../lib/difficulty'
 import type { LevelDef } from '../lib/levels'
 import type { Question } from '../lib/questions'
@@ -8,7 +9,7 @@ import type { DrillResult } from '../lib/scoring'
 interface Props { level: Pick<LevelDef, 'id' | 'title'>; difficulty: Difficulty; questions: Question[]; onFinish: (result: DrillResult, missed: ReviewItem[]) => void }
 
 export default function DrillScreen({ level, difficulty, questions, onFinish }: Props) {
-  return <DrillSession level={level} questions={questions} eyebrow="MATH DRILL" subtitle={difficultyLabels[difficulty]}
+  return <DrillSession level={level} questions={questions} eyebrow="MATH DRILL" subtitle={difficultyLabels[difficulty]} spokenPrompt={spokenQuestion}
     onFinish={(result, attempts) => onFinish(result, attempts.filter(attempt => !attempt.correct).map(({ question, answeredAt }) => ({
       kind: 'math', levelId: level.id, difficulty, first: question.first, second: question.second, operator: question.operator,
       text: question.text, answer: question.answer, missedAt: answeredAt,

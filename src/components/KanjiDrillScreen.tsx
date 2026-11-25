@@ -8,6 +8,7 @@ interface Props { level: KanjiLevel; questions: KanjiQuestion[]; onFinish: (resu
 
 export default function KanjiDrillScreen({ level, questions, onFinish }: Props) {
   return <DrillSession level={level} questions={questions} eyebrow="KANJI DRILL" subtitle="よみかたを えらぼう"
+    spokenPrompt={() => 'よみかたを えらんでね'} spokenFeedback={({ entry }) => `${entry.wordReading}。${entry.example}`}
     onFinish={(result, attempts) => onFinish(result, attempts.filter(attempt => !attempt.correct).map(({ question: { entry }, answeredAt }) => ({
       kind: 'kanji', gradeId: level.id, kanji: entry.kanji, word: entry.word, wordReading: entry.wordReading, missedAt: answeredAt,
     })))} />

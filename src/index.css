@@ -7,6 +7,7 @@
 body { margin: 0; }
 button { font: inherit; color: inherit; cursor: pointer; min-height: 56px; touch-action: manipulation; }
 button:focus-visible { outline: 3px solid #286eab; outline-offset: 3px; }
+.speaker-button { min-height: 48px; max-width: 100%; margin: 6px 0 12px; padding: 4px 14px; border: 1px solid var(--line); border-radius: 24px; background: var(--tint); }
 h1, h2, p { margin: 0; }
 .masthead { background: #fffefa; border-bottom: 1px solid var(--line); }
 .masthead > div, main { width: min(720px, calc(100% - 32px)); margin: auto; }

@@ -3,6 +3,7 @@ import { kanjiLevels } from './kanji'
 import { distinctReadings, readingChoices } from './kanjiQuestions'
 import { mathChoices, type Question } from './questions'
 import { shuffle } from './shuffle'
+import { spokenQuestion } from './speech'
 import { clockLevels, type ClockTime } from './clock'
 import { clockChoices, formatTime } from './clockQuestions'
 import { coinsSignature, denominations, moneyLevels, moneyTotal, type CoinGroup } from './money'
@@ -13,7 +14,7 @@ export type ReviewItem = { kind: 'math'; levelId: string; difficulty: Difficulty
   | { kind: 'clock'; levelId: string; hour: number; minute: number; missedAt: number }
   | { kind: 'money'; levelId: string; coins: CoinGroup[]; total: number; missedAt: number }
 
-export interface ReviewQuestion { key: string; prompt: string; promptLabel: string; answer: string; choices: string[]; clock?: ClockTime; money?: CoinGroup[]; example?: string }
+export interface ReviewQuestion { key: string; prompt: string; promptLabel: string; spokenPrompt?: string; answer: string; choices: string[]; clock?: ClockTime; money?: CoinGroup[]; example?: string }
 const storageKey = 'kids-learning-game:review:v1'
 
 export function reviewKey(item: ReviewItem) {
@@ -87,7 +88,7 @@ export function toReviewQuestions(items: ReviewItem[], rng = Math.random): Revie
       const stage = moneyLevels.find(level => level.id === item.levelId)!
       return { key, prompt: '', promptLabel: 'ぜんぶで いくら？', money: item.coins, answer: `${item.total}円`, choices: moneyChoices(stage, item.total, item.coins, rng).map(value => `${value}円`) }
     }
-    if (item.kind === 'math') return { key, prompt: item.text, promptLabel: 'こたえを えらぼう', answer: String(item.answer),
+    if (item.kind === 'math') return { key, prompt: item.text, promptLabel: 'こたえを えらぼう', spokenPrompt: spokenQuestion(item), answer: String(item.answer),
       choices: mathChoices(item.answer, item.second, item.operator, rng).map(String) }
     const grade = kanjiLevels.find(level => level.id === item.gradeId)!
     return { key, prompt: item.word, promptLabel: 'よみかたを えらぼう', answer: item.wordReading,

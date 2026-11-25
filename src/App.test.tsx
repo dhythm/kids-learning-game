@@ -9,7 +9,7 @@ import { formatTime } from './lib/clockQuestions'
 import { loadReview } from './lib/review'
 
 beforeEach(() => { localStorage.clear(); vi.useFakeTimers() })
-afterEach(() => { cleanup(); vi.useRealTimers() })
+afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllGlobals() })
 
 it.each([
   { id: 'clock-s1', title: /○じと ○じはん/, report: 'とけいドリル' },
@@ -112,6 +112,7 @@ it('records a math miss, keeps it after a wrong review and clears it after a cor
 
 it('gives immediate feedback, advances once, saves a record, and replays', () => {
   start()
+  expect(screen.queryByRole('button', { name: /きく/ })).not.toBeInTheDocument()
   for (let index = 1; index <= 10; index++) {
     expect(screen.getByText(`${index} / 10`)).toBeVisible()
     const choice = answerButton()
@@ -200,6 +201,29 @@ it('lists only the latest fourteen local play dates, newest first', () => {
   expect(dates).toHaveLength(14)
   expect(dates[0]).toHaveTextContent('11月24日（日）')
   expect(dates[13]).toHaveTextContent('11月11日（月）')
+})
+
+it('only reads the kanji answer on request after answering, and stops on advance', () => {
+  const synth = { speak: vi.fn(), cancel: vi.fn() }
+  vi.stubGlobal('speechSynthesis', synth)
+  vi.stubGlobal('SpeechSynthesisUtterance', class { constructor(readonly text: string) {} })
+  render(<App />)
+  fireEvent.click(screen.getByRole('button', { name: /1年生の漢字/ }))
+  expect(synth.speak).not.toHaveBeenCalled()
+  fireEvent.click(screen.getByRole('button', { name: '🔊 きく' }))
+  expect(synth.speak).toHaveBeenLastCalledWith(expect.objectContaining({ text: 'よみかたを えらんでね' }))
+  const word = screen.getByRole('heading', { level: 2 }).textContent
+  const entry = kanjiLevels[0].entries.find(candidate => candidate.word === word)!
+  fireEvent.click(screen.getByRole('button', { name: entry.wordReading }))
+  act(() => vi.advanceTimersByTime(1000))
+  expect(synth.speak).toHaveBeenCalledTimes(1)
+  fireEvent.click(screen.getByRole('button', { name: '🔊 よみと れいぶんを きく' }))
+  expect(synth.speak).toHaveBeenLastCalledWith(expect.objectContaining({ text: `${entry.wordReading}。${entry.example}` }))
+  synth.cancel.mockClear()
+  fireEvent.click(screen.getByRole('button', { name: 'つぎへ' }))
+  expect(synth.cancel).toHaveBeenCalled()
+  expect(screen.getByText('2 / 10')).toBeVisible()
+  expect(synth.speak).toHaveBeenCalledTimes(2)
 })
 
 it('plays a kanji set, awards badges, and reports the plain grade key', () => {
