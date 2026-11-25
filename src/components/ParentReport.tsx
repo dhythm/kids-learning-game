@@ -1,5 +1,6 @@
 import { difficulties, difficultyLabels, subjectKey } from '../lib/difficulty'
 import { levels } from '../lib/levels'
+import { danLevels } from '../lib/kukuDan'
 import { kanjiLevels } from '../lib/kanji'
 import { visualSubjects } from '../lib/visualSubjects'
 import { currentStreak, localDate, totalCorrect, weekdays, type StatsStore } from '../lib/stats'
@@ -14,6 +15,8 @@ export default function ParentReport({ store, onHome }: { store: StatsStore; onH
   const questions = subjects.reduce((sum, subject) => sum + subject.totalQuestions, 0)
   const sections = levels.map(level => ({ title: level.title, column: '難易度',
     rows: difficulties.map(difficulty => ({ key: subjectKey(level.id, difficulty), label: difficultyLabels[difficulty] })) }))
+  const danRows = danLevels.map(level => ({ key: subjectKey(level.id, 'normal'), label: level.title })).filter(row => store.byKey[row.key]?.plays)
+  if (danRows.length) sections.push({ title: '九九ドリル', column: '段', rows: danRows })
   for (const subject of [{ title: 'かんじドリル', levels: kanjiLevels, column: '学年' }, ...visualSubjects.map(subject => ({ ...subject, column: 'ステージ' }))]) {
     const rows = subject.levels.filter(level => store.byKey[level.id]?.plays).map(level => ({ key: level.id, label: level.title }))
     if (rows.length) sections.push({ title: subject.title, column: subject.column, rows })

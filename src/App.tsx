@@ -18,11 +18,12 @@ import type { KanjiLevel } from './lib/kanji'
 import { generateKanjiSet, type KanjiQuestion } from './lib/kanjiQuestions'
 import { loadStats, recordResult } from './lib/stats'
 import type { LevelDef } from './lib/levels'
+import { generateDanSet, type DanLevel } from './lib/kukuDan'
 import { generateSet, type Question } from './lib/questions'
 import type { DrillResult } from './lib/scoring'
 import { getBest, saveResult, type BestScore } from './lib/storage'
 
-type MathSelection = { level: LevelDef; difficulty: Difficulty }
+type MathSelection = { level: LevelDef; difficulty: Difficulty } | { level: DanLevel; difficulty: 'normal' }
 type KanjiSelection = { level: KanjiLevel }
 type Selection = MathSelection | { level: KanjiLevel | ClockLevel | MoneyLevel }
 type Screen = { name: 'home' } | { name: 'report' }
@@ -39,7 +40,8 @@ export default function App() {
   function start(selection: Selection) {
     if ('difficulty' in selection) {
       const { level, difficulty } = selection
-      setScreen({ name: 'math', level, difficulty, questions: generateSet(level, difficulty) })
+      const questions = 'dan' in level ? generateDanSet(level.dan) : generateSet(level, difficulty)
+      setScreen({ ...selection, name: 'math', questions })
     } else {
       const { level } = selection
       if ('step' in level) setScreen({ name: 'clock', level, questions: generateClockSet(level) })
@@ -69,7 +71,8 @@ export default function App() {
   return <>
     <header className="masthead"><div><span className="brand"><b aria-hidden="true">▦</b>まなびノート</span><span className="subject">さんすう・かんじ・とけい・おかね</span></div></header>
     <main>
-      {screen.name === 'home' && <HomeScreen onStart={(level, difficulty) => start({ level, difficulty })} onStageStart={level => start({ level })} onReview={startReview} onReport={() => setScreen({ name: 'report' })} />}
+      {screen.name === 'home' && <HomeScreen onStart={(level, difficulty) => start({ level, difficulty })} onDanStart={level => start({ level, difficulty: 'normal' })}
+        onStageStart={level => start({ level })} onReview={startReview} onReport={() => setScreen({ name: 'report' })} />}
       {screen.name === 'report' && <ParentReport store={loadStats()} onHome={home} />}
       {screen.name === 'math' && <DrillScreen {...screen} onFinish={(result, missed) => finish(screen, result, missed)} />}
       {screen.name === 'kanji' && <KanjiDrillScreen {...screen} onFinish={(result, missed) => finish(screen, result, missed)} />}

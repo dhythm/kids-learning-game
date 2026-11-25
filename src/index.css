@@ -39,7 +39,11 @@ h1 { font-size: clamp(28px, 5vw, 43px); letter-spacing: -.045em; line-height: 1.
 [data-level="kuku"] { --accent: #8c6398; --tint: #f0e5f5; }
 [data-level="multiply"] { --accent: #a95b53; --tint: #fbe3dc; }
 [data-level="divide"] { --accent: #337c82; --tint: #dbf0ed; }
-.level-card, .sheet { background: #fffefa; border: 1px solid var(--line); border-radius: 15px; box-shadow: 0 3px 0 #eae9df; }
+.level-card, .dan-card, .sheet { background: #fffefa; border: 1px solid var(--line); border-radius: 15px; box-shadow: 0 3px 0 #eae9df; }
+.dan-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.dan-card { display: grid; place-content: center; padding: 8px 4px; }
+.dan-card strong { font-size: 21px; }
+.dan-card small { font-size: 12px; }
 .level-card { display: flex; flex-direction: column; text-align: left; padding: 16px 18px 10px; }
 @media (hover: hover) { .level-card:hover { border-color: var(--accent); } }
 .card-top, .card-bottom { width: 100%; gap: 8px; }

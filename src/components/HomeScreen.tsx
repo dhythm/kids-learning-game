@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { badges, earnedBadgeIds } from '../lib/badges'
 import { difficulties, difficultyLabels, subjectKey, type Difficulty } from '../lib/difficulty'
 import { levels, type LevelDef } from '../lib/levels'
+import { danLevels, type DanLevel } from '../lib/kukuDan'
 import { currentStreak, loadStats, thisWeek } from '../lib/stats'
 import { loadReview } from '../lib/review'
 import { loadBest } from '../lib/storage'
@@ -11,9 +12,9 @@ import { visualSubjects } from '../lib/visualSubjects'
 import type { ClockLevel } from '../lib/clock'
 import type { MoneyLevel } from '../lib/money'
 
-interface Props { onStart: (level: LevelDef, difficulty: Difficulty) => void; onStageStart: (level: KanjiLevel | ClockLevel | MoneyLevel) => void; onReview: () => void; onReport: () => void }
+interface Props { onStart: (level: LevelDef, difficulty: Difficulty) => void; onDanStart: (level: DanLevel) => void; onStageStart: (level: KanjiLevel | ClockLevel | MoneyLevel) => void; onReview: () => void; onReport: () => void }
 
-export default function HomeScreen({ onStart, onStageStart, onReview, onReport }: Props) {
+export default function HomeScreen({ onStart, onDanStart, onStageStart, onReview, onReport }: Props) {
   const [selected, select] = useState<LevelDef | null>(null)
   const best = loadBest()
   if (selected) return <section className="sheet" data-level={selected.id}>
@@ -51,6 +52,15 @@ export default function HomeScreen({ onStart, onStageStart, onReview, onReport }
         <strong>{level.title}</strong><span className="description">{level.description}</span>
         <span className="card-bottom"><span>☆ ベスト: {scores.length ? `${Math.max(...scores)}てん` : '—'}</span><span className="arrow" aria-hidden="true">→</span></span>
       </button>})}</div>
+    </section>
+    <section aria-labelledby="dan-title">
+      <div className="section-heading"><h2 id="dan-title">九九ドリル</h2><span>全{danLevels.length}段</span></div>
+      <div className="dan-grid">{danLevels.map(level => {
+        const record = best[subjectKey(level.id, 'normal')]
+        return <button className="dan-card" key={level.id} onClick={() => onDanStart(level)}>
+          <strong>{level.title}</strong><small>ベスト: {record ? `${record.score}てん` : '—'}</small>
+        </button>
+      })}</div>
     </section>
     <section aria-labelledby="kanji-title">
       <div className="section-heading"><h2 id="kanji-title">かんじドリル</h2><span>全{kanjiLevels.length}学年</span></div>

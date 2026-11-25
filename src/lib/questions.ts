@@ -9,7 +9,7 @@ function integer(min: number, max: number, rng: Rng) {
   return min + Math.floor(rng() * (max - min + 1))
 }
 
-function makeQuestion(first: number, second: number, operator: Operator, rng: Rng): Question {
+export function makeQuestion(first: number, second: number, operator: Operator, rng: Rng): Question {
   const left = operator === '÷' ? first * second : first
   const answer = operator === '+' ? left + second : operator === '-' ? left - second : operator === '×' ? left * second : first
   return { first: left, second, operator, text: `${left} ${operator} ${second} = ?`, answer, choices: mathChoices(answer, second, operator, rng) }

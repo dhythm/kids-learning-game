@@ -55,6 +55,27 @@ function start() {
   expect(screen.getByText('やさしい')).toBeVisible()
 }
 
+it('plays a dan set, saves its math miss and reports only the practiced dan', () => {
+  render(<StrictMode><App /></StrictMode>)
+  const danCard = () => within(screen.getByRole('region', { name: '九九ドリル' })).getByRole('button', { name: /3のだん/ })
+  fireEvent.click(danCard())
+  for (let index = 0; index < 10; index++) {
+    const equation = screen.getByRole('heading', { name: /^3 × \d = \?$/ }).textContent!
+    const [left, right] = equation.match(/\d+/g)!.map(Number)
+    const answer = screen.getByRole('button', { name: String(left * right) })
+    fireEvent.click(index === 9 ? screen.getAllByRole('button').find(choice => choice !== answer)! : answer)
+    if (index === 0) expect(screen.getByRole('status')).toHaveTextContent('せいかい！')
+    act(() => vi.advanceTimersByTime(700))
+  }
+  expect(loadReview()).toEqual([expect.objectContaining({ kind: 'math', levelId: 'kuku-dan-3', difficulty: 'normal' })])
+  fireEvent.click(screen.getByRole('button', { name: 'レベルをえらぶ' }))
+  expect(danCard()).toHaveTextContent(`${loadBest()['kuku-dan-3:normal'].score}てん`)
+  fireEvent.click(screen.getByRole('button', { name: '保護者向けレポート' }))
+  const report = within(screen.getByRole('table', { name: '九九ドリル' }))
+  expect(report.getByRole('row', { name: /3のだん 1回 90%/ })).toBeVisible()
+  expect(report.getAllByRole('rowheader')).toHaveLength(1)
+})
+
 function answerButton() {
   const equation = screen.getByRole('heading', { name: /\d+ \+ \d+ = \?/ }).textContent!
   const [left, right] = equation.match(/\d+/g)!.map(Number)
