@@ -4,10 +4,14 @@ import { kanjiLevels } from './kanji'
 it.each(kanjiLevels)('$id has a complete, well-formed vocabulary list', ({ grade, entries }) => {
   expect(entries).toHaveLength([80, 160, 200][grade - 1])
   expect(new Set(entries.map(entry => entry.kanji)).size).toBe(entries.length)
-  for (const { kanji, reading, word, wordReading } of entries) {
+  for (const { kanji, reading, word, wordReading, example } of entries) {
     expect(kanji).toMatch(/^\p{Script=Han}$/u)
     expect(reading).toMatch(/^[ぁ-んー]+$/)
     expect(word).toContain(kanji)
     expect(wordReading).toMatch(/^[ぁ-んー]+$/)
+    expect(example.trim()).not.toBe('')
+    expect(example).toContain(word)
+    expect([...example].length).toBeGreaterThanOrEqual(5)
+    expect([...example].length).toBeLessThanOrEqual(40)
   }
 })

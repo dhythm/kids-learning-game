@@ -1,10 +1,10 @@
 import type { KanjiEntry } from './kanji'
 import { shuffle } from './shuffle'
 
-export interface KanjiQuestion { entry: KanjiEntry; text: string; target: string; answer: string; choices: string[] }
+export interface KanjiQuestion { entry: KanjiEntry; text: string; target: string; example: string; answer: string; choices: string[] }
 
 function makeQuestion(entry: KanjiEntry, readings: string[], rng: () => number): KanjiQuestion {
-  return { entry, text: entry.word, target: entry.kanji, answer: entry.wordReading, choices: readingChoices(entry.wordReading, readings, rng) }
+  return { entry, text: entry.word, target: entry.kanji, example: entry.example, answer: entry.wordReading, choices: readingChoices(entry.wordReading, readings, rng) }
 }
 
 export function readingChoices(answer: string, readings: string[], rng: () => number) {

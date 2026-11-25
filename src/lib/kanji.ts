@@ -2,7 +2,7 @@ import grade1 from '../data/kanji-grade1.json'
 import grade2 from '../data/kanji-grade2.json'
 import grade3 from '../data/kanji-grade3.json'
 
-export interface KanjiEntry { kanji: string; reading: string; word: string; wordReading: string }
+export interface KanjiEntry { kanji: string; reading: string; word: string; wordReading: string; example: string }
 type Grade = 1 | 2 | 3
 export interface KanjiLevel { id: `kanji-g${Grade}`; grade: Grade; title: string; entries: readonly KanjiEntry[] }
 

@@ -13,7 +13,7 @@ export type ReviewItem = { kind: 'math'; levelId: string; difficulty: Difficulty
   | { kind: 'clock'; levelId: string; hour: number; minute: number; missedAt: number }
   | { kind: 'money'; levelId: string; coins: CoinGroup[]; total: number; missedAt: number }
 
-export interface ReviewQuestion { key: string; prompt: string; promptLabel: string; answer: string; choices: string[]; clock?: ClockTime; money?: CoinGroup[] }
+export interface ReviewQuestion { key: string; prompt: string; promptLabel: string; answer: string; choices: string[]; clock?: ClockTime; money?: CoinGroup[]; example?: string }
 const storageKey = 'kids-learning-game:review:v1'
 
 export function reviewKey(item: ReviewItem) {
@@ -91,6 +91,7 @@ export function toReviewQuestions(items: ReviewItem[], rng = Math.random): Revie
       choices: mathChoices(item.answer, item.second, item.operator, rng).map(String) }
     const grade = kanjiLevels.find(level => level.id === item.gradeId)!
     return { key, prompt: item.word, promptLabel: 'よみかたを えらぼう', answer: item.wordReading,
+      example: grade.entries.find(entry => entry.kanji === item.kanji && entry.word === item.word)?.example,
       choices: readingChoices(item.wordReading, distinctReadings(grade.entries), rng) }
   })
 }
