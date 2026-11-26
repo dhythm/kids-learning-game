@@ -1,8 +1,9 @@
 import type { Difficulty } from './difficulty'
 import type { LevelDef, Operator } from './levels'
 import { shuffle } from './shuffle'
+import { generateWordProblem, generateWordSet } from './wordProblems'
 
-export interface Question { first: number; second: number; operator: Operator; text: string; answer: number; choices: number[] }
+export interface Question { first: number; second: number; operator: Operator; text: string; prompt?: string; answer: number; choices: number[] }
 type Rng = () => number
 
 function integer(min: number, max: number, rng: Rng) {
@@ -22,6 +23,7 @@ export function mathChoices(answer: number, second: number, operator: Operator, 
 }
 
 export function generateQuestion(level: LevelDef, difficulty: Difficulty, rng: Rng = Math.random) {
+  if (level.id === 'word-problems') return generateWordProblem(difficulty, rng)
   const { left, right } = level.ranges[difficulty]
   const operator = level.operators[integer(0, level.operators.length - 1, rng)]
   const first = integer(...left, rng)
@@ -30,6 +32,7 @@ export function generateQuestion(level: LevelDef, difficulty: Difficulty, rng: R
 }
 
 export function generateSet(level: LevelDef, difficulty: Difficulty, count = 10, rng: Rng = Math.random) {
+  if (level.id === 'word-problems') return generateWordSet(difficulty, count, rng)
   const { left, right } = level.ranges[difficulty]
   const questions = new Map<string, Question>()
   for (let attempt = 0; questions.size < count && attempt < count * 3; attempt++) {

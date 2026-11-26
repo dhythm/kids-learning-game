@@ -15,6 +15,11 @@ export interface LevelDef {
   ranges: Record<Difficulty, { left: Range; right: Range }>
 }
 
+export const wordProblemLevel: LevelDef = {
+  id: 'word-problems', title: 'ぶんしょうだい', gradeLabel: '小学1〜3年', description: 'おはなしの けいさん', icon: '📖', operators: ['+', '-'],
+  ranges: { easy: operands([2, 9]), normal: operands([5, 30]), hard: operands([15, 99]) },
+}
+
 export const levels: LevelDef[] = [
   { id: 'add-basic', title: 'たしざん入門', gradeLabel: '小学1年目安', description: 'ふたつの数をたしてみよう。', icon: '+', operators: ['+'],
     ranges: { easy: operands([1, 5]), normal: operands([1, 10]), hard: operands([5, 20]) } },
@@ -28,4 +33,5 @@ export const levels: LevelDef[] = [
     ranges: { easy: operands([10, 30], [2, 5]), normal: operands([10, 99], [1, 9]), hard: operands([20, 99], [6, 9]) } },
   { id: 'divide', title: 'わりざん', gradeLabel: '小学3〜5年', description: 'ぴったりわりきれる数を見つけよう。', icon: '÷', operators: ['÷'],
     ranges: { easy: operands([1, 5], [2, 5]), normal: operands([1, 12], [1, 9]), hard: operands([6, 12], [3, 12]) } },
+  wordProblemLevel,
 ]

@@ -7,7 +7,7 @@ import { isSpeechAvailable } from '../lib/speech'
 import type { ClockTime } from '../lib/clock'
 import type { CoinGroup } from '../lib/money'
 
-interface Prompt { text: string; target?: string; example?: string; promptLabel?: string; clock?: ClockTime; money?: CoinGroup[]; answer: number | string; choices: (number | string)[] }
+interface Prompt { text: string; first?: number; second?: number; operator?: string; target?: string; example?: string; promptLabel?: string; clock?: ClockTime; money?: CoinGroup[]; answer: number | string; choices: (number | string)[] }
 interface Attempt<Question> { question: Question; correct: boolean; answeredAt: number }
 interface Props<Question extends Prompt> { level: { id: string; title: string }; eyebrow: string; subtitle?: string; questions: Question[]; spokenPrompt?: (question: Question) => string; spokenFeedback?: (question: Question) => string; onFinish: (result: DrillResult, attempts: Attempt<Question>[]) => void }
 
@@ -59,7 +59,7 @@ export default function DrillSession<Question extends Prompt>({ level, eyebrow, 
     <progress value={index + 1} max={questions.length} aria-label="もんだいの進みぐあい" />
     <div className="combo">{stats.combo >= 2 && `🔥 ${stats.combo}コンボ`}</div>
     {question.clock ? <ClockFace {...question.clock} /> : question.money ? <MoneyVisual coins={question.money} /> :
-      <h2 className="question" aria-label={question.text} aria-live="polite">{'target' in question ? [...question.text].map((character, position) =>
+      <h2 className="question" data-first={question.first} data-second={question.second} data-operator={question.operator} aria-label={question.text} aria-live="polite">{'target' in question ? [...question.text].map((character, position) =>
         character === question.target ? <span className="target-kanji" key={position}>{character}</span> : character) : question.text}</h2>}
     {selected !== null && spokenFeedback
       ? <SpeakerButton key={index} text={spokenFeedback(question)} label="よみと れいぶんを きく" />

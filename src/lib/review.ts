@@ -9,7 +9,7 @@ import { clockChoices, formatTime } from './clockQuestions'
 import { coinsSignature, denominations, moneyLevels, moneyTotal, type CoinGroup } from './money'
 import { moneyChoices } from './moneyQuestions'
 
-export type ReviewItem = { kind: 'math'; levelId: string; difficulty: Difficulty; missedAt: number } & Omit<Question, 'choices'>
+export type ReviewItem = { kind: 'math'; levelId: string; difficulty: Difficulty; missedAt: number; promptText?: string } & Omit<Question, 'choices' | 'prompt'>
   | { kind: 'kanji'; gradeId: string; kanji: string; word: string; wordReading: string; missedAt: number }
   | { kind: 'clock'; levelId: string; hour: number; minute: number; missedAt: number }
   | { kind: 'money'; levelId: string; coins: CoinGroup[]; total: number; missedAt: number }
@@ -45,6 +45,7 @@ function validItem(value: unknown): value is ReviewItem {
   if (item.kind === 'kanji') return kanjiLevels.some(level => level.id === item.gradeId && level.entries.some(entry =>
     entry.word === item.word && entry.kanji === item.kanji && entry.wordReading === item.wordReading))
   return item.kind === 'math' && nonempty(item.levelId) && difficulties.some(difficulty => difficulty === item.difficulty) &&
+    (item.promptText === undefined || (typeof item.promptText === 'string' && item.promptText.length <= 200)) &&
     natural(item.first) && natural(item.second) && natural(item.answer) && ['+', '-', '×', '÷'].some(operator => operator === item.operator) && nonempty(item.text)
 }
 
@@ -88,7 +89,7 @@ export function toReviewQuestions(items: ReviewItem[], rng = Math.random): Revie
       const stage = moneyLevels.find(level => level.id === item.levelId)!
       return { key, prompt: '', promptLabel: 'ぜんぶで いくら？', money: item.coins, answer: `${item.total}円`, choices: moneyChoices(stage, item.total, item.coins, rng).map(value => `${value}円`) }
     }
-    if (item.kind === 'math') return { key, prompt: item.text, promptLabel: 'こたえを えらぼう', spokenPrompt: spokenQuestion(item), answer: String(item.answer),
+    if (item.kind === 'math') return { key, prompt: item.promptText ?? item.text, promptLabel: 'こたえを えらぼう', spokenPrompt: item.promptText ?? spokenQuestion(item), answer: String(item.answer),
       choices: mathChoices(item.answer, item.second, item.operator, rng).map(String) }
     const grade = kanjiLevels.find(level => level.id === item.gradeId)!
     return { key, prompt: item.word, promptLabel: 'よみかたを えらぼう', answer: item.wordReading,

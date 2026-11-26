@@ -61,6 +61,18 @@ it('reads only valid items and recovers from missing or unreadable data', () => 
   expect(removeSolved([])).toEqual([])
 })
 
+it('restores the missed story for display and speech, then removes it when solved', () => {
+  const promptText = 'りんごが 3こ あります。2こ もらうと ぜんぶで なんこですか？'
+  const item = { ...math, levelId: 'word-problems', first: 3, second: 2, operator: '+', answer: 5, text: '3 + 2 = ?', promptText } as const
+  addMissed([item])
+  const [question] = toReviewQuestions(loadReview())
+  expect(question).toMatchObject({ prompt: promptText, spokenPrompt: promptText, answer: '5' })
+  removeSolved([question.key])
+  expect(loadReview()).toEqual([])
+  localStorage.setItem(storageKey, JSON.stringify([42, 'あ'.repeat(201)].map(promptText => ({ ...item, promptText }))))
+  expect(loadReview()).toEqual([])
+})
+
 it('rebuilds four distinct math choices and four readings from the stored grade', () => {
   const [reading, equation] = toReviewQuestions([math, kanji], () => 0)
   expect(equation).toMatchObject({ key: reviewKey(math), prompt: math.text, answer: '56' })

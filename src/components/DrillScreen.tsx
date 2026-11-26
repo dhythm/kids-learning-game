@@ -9,9 +9,9 @@ import type { DrillResult } from '../lib/scoring'
 interface Props { level: Pick<LevelDef, 'id' | 'title'>; difficulty: Difficulty; questions: Question[]; onFinish: (result: DrillResult, missed: ReviewItem[]) => void }
 
 export default function DrillScreen({ level, difficulty, questions, onFinish }: Props) {
-  return <DrillSession level={level} questions={questions} eyebrow="MATH DRILL" subtitle={difficultyLabels[difficulty]} spokenPrompt={spokenQuestion}
+  return <DrillSession level={level} questions={questions} eyebrow="MATH DRILL" subtitle={difficultyLabels[difficulty]} spokenPrompt={question => question.prompt ?? spokenQuestion(question)}
     onFinish={(result, attempts) => onFinish(result, attempts.filter(attempt => !attempt.correct).map(({ question, answeredAt }) => ({
       kind: 'math', levelId: level.id, difficulty, first: question.first, second: question.second, operator: question.operator,
-      text: question.text, answer: question.answer, missedAt: answeredAt,
+      text: question.text, promptText: question.prompt, answer: question.answer, missedAt: answeredAt,
     })))} />
 }

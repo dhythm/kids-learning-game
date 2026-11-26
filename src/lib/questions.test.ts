@@ -9,7 +9,7 @@ function seededRng() {
   return () => ((state = (Math.imul(state, 1664525) + 1013904223) >>> 0) / 2 ** 32)
 }
 
-describe.each(levels.flatMap(level => difficulties.map(difficulty => ({ level, difficulty }))))('$level.id / $difficulty', ({ level, difficulty }) => {
+describe.each(levels.filter(level => level.id !== 'word-problems').flatMap(level => difficulties.map(difficulty => ({ level, difficulty }))))('$level.id / $difficulty', ({ level, difficulty }) => {
   const ranges = level.ranges[difficulty]
   it('generates valid equations and four distinct non-negative choices', () => {
     const rng = seededRng()

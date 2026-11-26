@@ -3,6 +3,7 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import App from './App'
 import { kanjiLevels } from './lib/kanji'
+import { levels } from './lib/levels'
 import { loadStats, recordResult } from './lib/stats'
 import { loadBest } from './lib/storage'
 import { formatTime } from './lib/clockQuestions'
@@ -47,13 +48,23 @@ it.each([
   expect(loadReview()).toEqual([])
 })
 
-function start() {
+function start(title = /たしざん入門/) {
   render(<StrictMode><App /></StrictMode>)
   expect(screen.getByRole('heading', { name: 'さんすうドリル' })).toBeVisible()
-  fireEvent.click(screen.getByRole('button', { name: /たしざん入門/ }))
+  fireEvent.click(screen.getByRole('button', { name: title }))
   fireEvent.click(screen.getByRole('button', { name: /やさしい/ }))
   expect(screen.getByText('やさしい')).toBeVisible()
 }
+
+it('answers an easy word problem from the home screen', () => {
+  start(/ぶんしょうだい/)
+  const story = screen.getByRole('heading', { name: /か？$/ })
+  expect(story.textContent!.length).toBeGreaterThan(15)
+  const { first, second, operator } = story.dataset
+  const answer = operator === '+' ? Number(first) + Number(second) : Number(first) - Number(second)
+  fireEvent.click(screen.getByRole('button', { name: String(answer) }))
+  expect(screen.getByRole('status')).toHaveTextContent('せいかい！')
+})
 
 it('plays a dan set, saves its math miss and reports only the practiced dan', () => {
   render(<StrictMode><App /></StrictMode>)
@@ -145,7 +156,7 @@ it('gives immediate feedback, advances once, saves a record, and replays', () =>
   const report = screen.getByRole('table', { name: 'たしざん入門' })
   expect(within(report).getByRole('row', { name: /やさしい 2回 50%/ })).toBeVisible()
   expect(screen.getByText('20問')).toBeVisible()
-  expect(screen.getAllByText('まだ遊んでいません')).toHaveLength(5)
+  expect(screen.getAllByText('まだ遊んでいません')).toHaveLength(levels.length - 1)
   fireEvent.click(screen.getByRole('button', { name: 'もどる' }))
   fireEvent.click(screen.getByRole('button', { name: /たしざん入門/ }))
   expect(screen.getByRole('button', { name: /やさしい.*1900てん/ })).toBeVisible()
