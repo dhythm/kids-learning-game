@@ -2,7 +2,7 @@ import { expect, it } from 'vitest'
 import { kanjiLevels } from './kanji'
 
 it.each(kanjiLevels)('$id has a complete, well-formed vocabulary list', ({ grade, entries }) => {
-  expect(entries).toHaveLength([80, 160, 200, 202][grade - 1])
+  expect(entries).toHaveLength([80, 160, 200, 202, 193][grade - 1])
   expect(new Set(entries.map(entry => entry.kanji)).size).toBe(entries.length)
   for (const { kanji, reading, word, wordReading, example } of entries) {
     expect(kanji).toMatch(/^\p{Script=Han}$/u)
@@ -11,13 +11,13 @@ it.each(kanjiLevels)('$id has a complete, well-formed vocabulary list', ({ grade
     expect(wordReading).toMatch(/^[ぁ-ん]+$/)
     expect(example.trim()).not.toBe('')
     expect(example).toContain(word)
-    expect([...example].length).toBeGreaterThanOrEqual(5)
-    expect([...example].length).toBeLessThanOrEqual(40)
+    expect([...example].length).toBeGreaterThanOrEqual(8)
+    expect([...example].length).toBeLessThanOrEqual(24)
   }
 })
 
-it('covers 642 kanji without overlap between grades', () => {
+it('covers 835 kanji without overlap between grades', () => {
   const kanji = kanjiLevels.flatMap(({ entries }) => entries.map(entry => entry.kanji))
-  expect(kanji).toHaveLength(642)
+  expect(kanji).toHaveLength(835)
   expect(new Set(kanji).size).toBe(kanji.length)
 })
